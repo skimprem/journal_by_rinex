@@ -168,12 +168,7 @@ def journal_generator(data, filename):
 def get_map(longitude, latitude, marker_name):
     ''' Get map of ties scheme '''
 
-<<<<<<< HEAD
-   
     fig = plt.figure(figsize=(5, 5))
-=======
-    fig = plt.figure(figsize=(15, 15))
->>>>>>> 0f5af58f6f8dacda5e8553bb60375bb86678df03
       
     # extent = [longitude - 0.01, longitude + 0.01, latitude - 0.01, latitude + 0.01]
     request = cimgt.OSM()
@@ -193,7 +188,3 @@ def get_map(longitude, latitude, marker_name):
         color='k', transform=ccrs.PlateCarree())
 
     return fig
-
-# fig = get_map(37.6176, 55.7558, 'Moscow')
-
-# fig.savefig('test.png')
