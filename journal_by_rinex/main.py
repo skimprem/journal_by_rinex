@@ -78,6 +78,10 @@ class FileProcessorApp:
         self.save_path_text = tk.Entry(self.root, width=50, state='disabled')
         self.save_path_text.grid(row=19, column=0, columnspan=2, pady=5)
 
+        # Кнопка закрытия приложения
+        self.close_button = tk.Button(self.root, text="Закрыть", command=self.root.destroy)
+        self.close_button.grid(row=20, column=0, columnspan=2, pady=10)
+
     def create_text_input(self, label_text, variable, row):
         """Создает текстовое поле с меткой."""
         label = tk.Label(self.root, text=label_text)
@@ -134,7 +138,6 @@ class FileProcessorApp:
 
         # Пример обработки файлов
         for file in self.files:
-            filename = os.path.basename(file)
 
             file_info = get_info(file)
             match self.measurement_type.get():
