@@ -193,12 +193,12 @@ def get_map(longitude, latitude, marker_name):
     ''' Get map of ties scheme '''
 
    
-    fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(5, 5))
       
-    extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
+    # extent = [longitude - 0.01, longitude + 0.01, latitude - 0.01, latitude + 0.01]
     request = cimgt.OSM()
     ax = plt.axes(projection=request.crs)
-    ax.set_extent(extent)
+    # ax.set_extent(extent)
 
     zoom = 13
 
@@ -214,3 +214,6 @@ def get_map(longitude, latitude, marker_name):
 
     return fig
 
+# fig = get_map(37.6176, 55.7558, 'Moscow')
+
+# fig.savefig('test.png')
