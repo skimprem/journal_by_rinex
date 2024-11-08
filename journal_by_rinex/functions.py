@@ -139,13 +139,13 @@ def journal_generator(data, filename):
         a_pic_path = os.path.join(abs_path, 'default')
         b_pic_path = os.path.join(abs_path, ant_height_type)
 
-    a_picture = r'\includegraphics[width=0.2\textwidth]{'+a_pic_path+'}'
-    b_picture = r'\includegraphics[width=0.2\textwidth]{'+b_pic_path+'}'
+    a_picture = r'\includegraphics[width=0.2\textwidth]{' + a_pic_path.replace("\\", "/") + '}'
+    b_picture = r'\includegraphics[width=0.2\textwidth]{' + b_pic_path.replace("\\", "/") + '}'
 
     location_map = get_map(data['latitude'], data['longitude'], data['marker name'])
-    location_map_path = f'{data['marker name']}.png'
+    location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
     location_map.savefig(location_map_path)
-    insert_file = r'\includegraphics[width=0.3\textwidth]{'+location_map_path+'}'
+    insert_file = r'\includegraphics[width=0.3\textwidth]{'+location_map_path.replace('\\', '/')+'}'
 
     with doc.create(LongTable(r'|p{0.6\textwidth}|p{0.3\textwidth}|')) as table:
         table.add_hline()
@@ -165,34 +165,9 @@ def journal_generator(data, filename):
     # Generate the PDF
     doc.generate_pdf(filename, clean_tex=False) 
 
-
-def create_location_map(lat, lon, basename):
-    # Create a GeoDataFrame for the point
-    gdf = gpd.GeoDataFrame(geometry=[Point(lon, lat)], crs="EPSG:4326")
-    gdf = gdf.to_crs("EPSG:3857")  # Convert to Web Mercator projection for contextily
-
-    # Set up the plot
-    fig, ax = plt.subplots(figsize=(4, 4))
-    gdf.plot(ax=ax, color="red", marker="o", markersize=50)  # Plot the point
-    # ctx.add_basemap(ax, source=ctx.providers.Stamen.Terrain, zoom=12)  # Add basemap
-    ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, zoom=12)
-    # Customize the plot
-    ax.set_axis_off()
-    plt.tight_layout()
-
-    output_file = basename + '.png'
-
-    # Save the plot as an image
-    plt.savefig(output_file, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-
-    return output_file
-
-    
 def get_map(longitude, latitude, marker_name):
     ''' Get map of ties scheme '''
 
-   
     fig = plt.figure(figsize=(15, 15))
       
     extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
@@ -200,7 +175,7 @@ def get_map(longitude, latitude, marker_name):
     ax = plt.axes(projection=request.crs)
     ax.set_extent(extent)
 
-    zoom = 13
+    zoom = 11
 
     ax.add_image(request, zoom)
 
