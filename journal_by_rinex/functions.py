@@ -76,9 +76,9 @@ def journal_generator(data, filename):
     doc.append(NoEscape(r'\section*{ЖУРНАЛ СПУТНИКОВЫХ НАБЛЮДЕНИЙ}'))
 
     doc.append(NoEscape(f'Организация: {data['organization']} \\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindentНаименование пункта: {data['marker name']}\\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindentОбъект: {data['object']}\\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindentИсполнитель (ФИО подпись): {data['operator']}\\hrulefill'))
+    doc.append(NoEscape(f'\\par\\noindent Наименование пункта: {data['marker name']}\\hrulefill'))
+    doc.append(NoEscape(f'\\par\\noindent Объект: {data['object']}\\hrulefill'))
+    doc.append(NoEscape(f'\\par\\noindent Исполнитель (ФИО подпись): {data['operator']}\\hrulefill'))
 
     with doc.create(LongTable('l')) as table:
         table.add_row(["Приближенные координаты"])
@@ -113,9 +113,9 @@ def journal_generator(data, filename):
         table.add_hline()
         table.add_row(['Высота антенны', data['antenna height'], data['antenna height']])
         table.add_hline()
-        table.add_row(['GDOP', '', ''])
+        table.add_row(['GDOP', data['gdop'], data['gdop']])
         table.add_hline()
-        table.add_row(['PDOP', '', ''])
+        table.add_row(['PDOP', data['pdop'], data['pdop']])
         table.add_hline()
 
     doc.append(
