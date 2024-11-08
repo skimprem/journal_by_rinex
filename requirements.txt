@@ -2,3 +2,7 @@ tk
 georinex
 pyproj
 pylatex
+geopandas
+matplotlib
+contextily
+cartopy

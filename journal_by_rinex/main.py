@@ -157,7 +157,6 @@ class FileProcessorApp:
             file_info['gdop'] = metadata['GDOP']
             file_info['pdop'] = metadata['PDOP']
 
-            print(file_info['marker name'].strip())
             save_file = os.path.join(self.save_path, file_info['marker name'].strip())
             journal_generator(file_info, save_file)
 

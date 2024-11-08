@@ -1,14 +1,22 @@
+import os
 import georinex as gr
 import pyproj
 from pylatex import Document, Section, Table, Tabular, LongTable, NoEscape,\
     Package, Command, MultiColumn, MiniPage, MultiRow
 import numpy as np
+import geopandas as gpd
+import contextily as ctx
+from shapely.geometry import Point
+import matplotlib.pyplot as plt
+import cartopy.io.img_tiles as cimgt
+from cartopy import crs as ccrs
+
+
 
 def get_info(rinex_file):
 
     header = gr.rinexheader(rinex_file)
 
-    print('header ...', end='')
     info = {}
     info['marker name'] = header['MARKER NAME'].strip()
     x, y, z = map(float, header['APPROX POSITION XYZ'].split())
@@ -23,7 +31,6 @@ def get_info(rinex_file):
     info['antenna number'] = ant_type[:20].strip()
     info['antenna type'] = ant_type[20:40].strip()
     info['antenna height'], _, _ = map(float, header['ANTENNA: DELTA H/E/N'].split())
-    print('done!')
 
     # print('loading ... ', end='')
     # data = gr.load(rinex_file)
@@ -111,16 +118,35 @@ def journal_generator(data, filename):
         table.add_row(['PDOP', '', ''])
         table.add_hline()
 
-    doc.append(NoEscape(r'\begin{center}\textbf{Тип измерения высоты антенны (наклонная, вертикальная, вертикальная до фазового центра)}\end{center}'))
+    doc.append(
+        NoEscape(
+            r'''\begin{center}
+                \textbf{Тип измерения высоты антенны (наклонная, вертикальная,
+                вертикальная до фазового центра)}
+            \end{center}'''
+        ))
     
     ant_height_type = data['antenna height type']
-    if ant_height_type in ['base', 'phase']:
-        a_picture = r'\includegraphics[width=0.2\textwidth]{'+ant_height_type+'}'
-        b_picture = r'\includegraphics[width=0.2\textwidth]{tripod_default}'
-    else:
-        a_picture = r'\includegraphics[width=0.2\textwidth]{default}'
-        b_picture = r'\includegraphics[width=0.2\textwidth]{'+ant_height_type+'}'
     
+    abs_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__), 'images'))
+ 
+    if ant_height_type in ['base', 'phase']:
+        a_pic_path = os.path.join(abs_path, ant_height_type)
+        b_pic_path = os.path.join(abs_path, 'tripod_default')
+    else:
+        a_pic_path = os.path.join(abs_path, 'default')
+        b_pic_path = os.path.join(abs_path, ant_height_type)
+
+    a_picture = r'\includegraphics[width=0.2\textwidth]{'+a_pic_path+'}'
+    b_picture = r'\includegraphics[width=0.2\textwidth]{'+b_pic_path+'}'
+
+    location_map = get_map(data['latitude'], data['longitude'], data['marker name'])
+    location_map_path = f'{data['marker name']}.png'
+    location_map.savefig(location_map_path)
+    insert_file = r'\includegraphics[width=0.3\textwidth]{'+location_map_path+'}'
+
     with doc.create(LongTable(r'|p{0.6\textwidth}|p{0.3\textwidth}|')) as table:
         table.add_hline()
         table.add_row(
@@ -130,17 +156,61 @@ def journal_generator(data, filename):
             ]
         )
         table.add_hline()
-        table.add_row([MultiRow(4, data=''), 'A. Без штатива'])
+        table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
         table.add_row(['', NoEscape(a_picture)])
         table.add_row(['', 'B. На штативе'])
         table.add_row(['', NoEscape(b_picture)])
         table.add_hline()
     
     # Generate the PDF
-    doc.generate_pdf(filename, clean_tex=True) 
+    doc.generate_pdf(filename, clean_tex=False) 
 
-# info = get_info('nogN2771.24O')
 
-# info['antenna height type'] = 'base'
+def create_location_map(lat, lon, basename):
+    # Create a GeoDataFrame for the point
+    gdf = gpd.GeoDataFrame(geometry=[Point(lon, lat)], crs="EPSG:4326")
+    gdf = gdf.to_crs("EPSG:3857")  # Convert to Web Mercator projection for contextily
 
-# journal_generator(info, info['marker name'].strip())
+    # Set up the plot
+    fig, ax = plt.subplots(figsize=(4, 4))
+    gdf.plot(ax=ax, color="red", marker="o", markersize=50)  # Plot the point
+    # ctx.add_basemap(ax, source=ctx.providers.Stamen.Terrain, zoom=12)  # Add basemap
+    ctx.add_basemap(ax, source=ctx.providers.OpenStreetMap.Mapnik, zoom=12)
+    # Customize the plot
+    ax.set_axis_off()
+    plt.tight_layout()
+
+    output_file = basename + '.png'
+
+    # Save the plot as an image
+    plt.savefig(output_file, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+    return output_file
+
+    
+def get_map(longitude, latitude, marker_name):
+    ''' Get map of ties scheme '''
+
+   
+    fig = plt.figure(figsize=(15, 15))
+      
+    extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
+    request = cimgt.OSM()
+    ax = plt.axes(projection=request.crs)
+    ax.set_extent(extent)
+
+    zoom = 13
+
+    ax.add_image(request, zoom)
+
+    ax.plot(longitude, latitude, '-ok', mfc='w', transform=ccrs.PlateCarree())
+   
+    ax.annotate(marker_name, xy=(longitude, latitude),
+        xycoords='data', xytext=(1.5, 1.5),
+        textcoords='offset points',
+        fontsize=14,
+        color='k', transform=ccrs.PlateCarree())
+
+    return fig
+
