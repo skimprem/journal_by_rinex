@@ -3,13 +3,13 @@ import georinex as gr
 import pyproj
 from pylatex import Document, Section, Table, Tabular, LongTable, NoEscape,\
     Package, Command, MultiColumn, MiniPage, MultiRow
-import numpy as np
-import geopandas as gpd
-import contextily as ctx
-from shapely.geometry import Point
-import matplotlib.pyplot as plt
-import cartopy.io.img_tiles as cimgt
-from cartopy import crs as ccrs
+# import numpy as np
+# import geopandas as gpd
+# import contextily as ctx
+# from shapely.geometry import Point
+# import matplotlib.pyplot as plt
+# import cartopy.io.img_tiles as cimgt
+# from cartopy import crs as ccrs
 
 
 
@@ -142,10 +142,10 @@ def journal_generator(data, filename):
     a_picture = r'\includegraphics[width=0.2\textwidth]{' + a_pic_path.replace("\\", "/") + '}'
     b_picture = r'\includegraphics[width=0.2\textwidth]{' + b_pic_path.replace("\\", "/") + '}'
 
-    location_map = get_map(data['latitude'], data['longitude'], data['marker name'])
-    location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
-    location_map.savefig(location_map_path)
-    insert_file = r'\includegraphics[width=0.3\textwidth]{'+location_map_path.replace('\\', '/')+'}'
+    # location_map = get_map(data['latitude'], data['longitude'], data['marker name'])
+    # location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
+    # location_map.savefig(location_map_path)
+    # insert_file = r'\includegraphics[width=0.3\textwidth]{'+location_map_path.replace('\\', '/')+'}'
 
     with doc.create(LongTable(r'|p{0.6\textwidth}|p{0.3\textwidth}|')) as table:
         table.add_hline()
@@ -156,7 +156,8 @@ def journal_generator(data, filename):
             ]
         )
         table.add_hline()
-        table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
+        # table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
+        table.add_row([MultiRow(4, data=''), 'A. Без штатива'])
         table.add_row(['', NoEscape(a_picture)])
         table.add_row(['', 'B. На штативе'])
         table.add_row(['', NoEscape(b_picture)])
@@ -165,27 +166,27 @@ def journal_generator(data, filename):
     # Generate the PDF
     doc.generate_pdf(filename, clean_tex=False) 
 
-def get_map(longitude, latitude, marker_name):
-    ''' Get map of ties scheme '''
+# def get_map(longitude, latitude, marker_name):
+#     ''' Get map of ties scheme '''
 
-    fig = plt.figure(figsize=(15, 15))
+#     fig = plt.figure(figsize=(15, 15))
       
-    extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
-    request = cimgt.OSM()
-    ax = plt.axes(projection=request.crs)
-    ax.set_extent(extent)
+#     extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
+#     request = cimgt.OSM()
+#     ax = plt.axes(projection=request.crs)
+#     ax.set_extent(extent)
 
-    zoom = 11
+#     zoom = 11
 
-    ax.add_image(request, zoom)
+#     ax.add_image(request, zoom)
 
-    ax.plot(longitude, latitude, '-ok', mfc='w', transform=ccrs.PlateCarree())
+#     ax.plot(longitude, latitude, '-ok', mfc='w', transform=ccrs.PlateCarree())
    
-    ax.annotate(marker_name, xy=(longitude, latitude),
-        xycoords='data', xytext=(1.5, 1.5),
-        textcoords='offset points',
-        fontsize=14,
-        color='k', transform=ccrs.PlateCarree())
+#     ax.annotate(marker_name, xy=(longitude, latitude),
+#         xycoords='data', xytext=(1.5, 1.5),
+#         textcoords='offset points',
+#         fontsize=14,
+#         color='k', transform=ccrs.PlateCarree())
 
-    return fig
+#     return fig
 
