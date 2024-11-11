@@ -2,9 +2,6 @@
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
-import os
-
-from .functions import get_info, journal_generator
 
 class FileProcessorApp:
     def __init__(self, root):
@@ -23,23 +20,23 @@ class FileProcessorApp:
         self.pdop = tk.StringVar(value='Введите PDOP')
 
         # Переменная для Radiobutton выбора
-        self.measurement_type = tk.StringVar(value="Без штатива до основания")  # Установка значения по умолчанию
+        self.measurement_type = tk.StringVar(value="Без штатива до основания")
 
         # Создание интерфейса
         self.create_widgets()
 
     def create_widgets(self):
         # Поля ввода для текстовых параметров
-        self.create_text_input("Организация", self.organization, 0)
-        self.create_text_input("Объект", self.object_name, 1)
-        self.create_text_input("Исполнитель", self.operator, 2)
-        self.create_text_input("Тип и характеристика геодезического знака", self.benchmark_type, 3)
-        self.create_text_input("Тип и характеристика центра (марки)", self.center_type, 4)
-        self.create_text_input("GDOP", self.gdop, 5)
-        self.create_text_input("PDOP", self.pdop, 6)
+        self.create_text_input("Организация", self.organization, 0, 0)
+        self.create_text_input("Объект", self.object_name, 1, 0)
+        self.create_text_input("Исполнитель", self.operator, 2, 0)
+        self.create_text_input("Тип геодезического знака", self.benchmark_type, 3, 0)
+        self.create_text_input("Тип центра (марки)", self.center_type, 4, 0)
+        self.create_text_input("GDOP", self.gdop, 0, 2)
+        self.create_text_input("PDOP", self.pdop, 1, 2)
 
-        # Радиокнопки для выбора типа измерения
-        tk.Label(self.root, text="Тип измерения:").grid(row=7, column=0, sticky=tk.W, padx=10, pady=5)
+        # Радиокнопки для выбора типа измерения в правой части
+        tk.Label(self.root, text="Тип измерения:").grid(row=2, column=2, sticky=tk.W, padx=10, pady=5)
         
         measurement_options = [
             "Без штатива до основания",
@@ -52,42 +49,41 @@ class FileProcessorApp:
         for idx, option in enumerate(measurement_options):
             tk.Radiobutton(
                 self.root, text=option, variable=self.measurement_type, value=option
-            ).grid(row=8 + idx, column=0, columnspan=2, sticky=tk.W, padx=10)
+            ).grid(row=3 + idx, column=2, sticky=tk.W, padx=10)
 
-        # Кнопка для добавления файлов
+        # Кнопка для добавления файлов и выбора пути сохранения в одной строке
         self.add_files_button = tk.Button(self.root, text="Добавить файлы", command=self.add_files)
-        self.add_files_button.grid(row=13, column=0, columnspan=2, pady=10)
+        self.add_files_button.grid(row=10, column=0, pady=5)
 
-        # Кнопка для выбора папки сохранения
         self.save_path_button = tk.Button(self.root, text="Выбрать путь для сохранения", command=self.select_save_path)
-        self.save_path_button.grid(row=14, column=0, columnspan=2, pady=10)
-
-        # Кнопка для выполнения обработки
-        self.process_button = tk.Button(self.root, text="Обработать файлы", command=self.process_files)
-        self.process_button.grid(row=15, column=0, columnspan=2, pady=20)
+        self.save_path_button.grid(row=10, column=1, pady=5)
 
         # Поле для отображения добавленных файлов
         self.files_list_label = tk.Label(self.root, text="Выбранные файлы:")
-        self.files_list_label.grid(row=16, column=0, columnspan=2)
-        self.files_list_text = tk.Text(self.root, height=10, width=50, state='disabled')
-        self.files_list_text.grid(row=17, column=0, columnspan=2, pady=5)
+        self.files_list_label.grid(row=11, column=0, columnspan=2, pady=(10, 0))
+        self.files_list_text = tk.Text(self.root, height=5, width=50, state='disabled')
+        self.files_list_text.grid(row=12, column=0, columnspan=2, pady=5)
 
         # Поле для отображения пути сохранения
         self.save_path_label = tk.Label(self.root, text="Путь для сохранения:")
-        self.save_path_label.grid(row=18, column=0, columnspan=2)
+        self.save_path_label.grid(row=13, column=0, columnspan=2, pady=(10, 0))
         self.save_path_text = tk.Entry(self.root, width=50, state='disabled')
-        self.save_path_text.grid(row=19, column=0, columnspan=2, pady=5)
+        self.save_path_text.grid(row=14, column=0, columnspan=2, pady=5)
+
+        # Кнопка для выполнения обработки
+        self.process_button = tk.Button(self.root, text="Обработать файлы", command=self.process_files)
+        self.process_button.grid(row=15, column=0, columnspan=2, pady=10)
 
         # Кнопка закрытия приложения
         self.close_button = tk.Button(self.root, text="Закрыть", command=self.root.destroy)
-        self.close_button.grid(row=20, column=0, columnspan=2, pady=10)
+        self.close_button.grid(row=16, column=0, columnspan=2, pady=5)
 
-    def create_text_input(self, label_text, variable, row):
+    def create_text_input(self, label_text, variable, row, column):
         """Создает текстовое поле с меткой."""
         label = tk.Label(self.root, text=label_text)
-        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
-        entry = tk.Entry(self.root, textvariable=variable, width=40)
-        entry.grid(row=row, column=1, padx=10, pady=5)
+        label.grid(row=row, column=column, sticky=tk.W, padx=10, pady=5)
+        entry = tk.Entry(self.root, textvariable=variable, width=30)
+        entry.grid(row=row, column=column + 1, padx=5, pady=5)
 
     def add_files(self):
         # Открытие диалога для выбора файлов
@@ -124,50 +120,12 @@ class FileProcessorApp:
             messagebox.showwarning("Нет пути для сохранения", "Пожалуйста, укажите путь для сохранения.")
             return
 
-        # Получение значений текстовых параметров и типа измерения
-        metadata = {
-            "Организация": self.organization.get(),
-            "Объект": self.object_name.get(),
-            "Исполнитель": self.operator.get(),
-            "Тип и характеристика геодезического знака": self.benchmark_type.get(),
-            "Тип и характеристика центра (марки)": self.center_type.get(),
-            "GDOP": self.gdop.get(),
-            "PDOP": self.pdop.get(),
-            "Тип измерения": self.measurement_type.get()
-        }
-
-        # Пример обработки файлов
-        for file in self.files:
-
-            file_info = get_info(file)
-            match self.measurement_type.get():
-                case 'Без штатива до основания':
-                    file_info['antenna height type'] = 'base'
-                case 'Без штатива до фазового центра':
-                    file_info['antenna height type'] = 'phase'
-                case 'На штативе наклонная':
-                    file_info['antenna height type'] = 'tripod_slant'
-                case 'На штативе до основания':
-                    file_info['antenna height type'] = 'tripod_base'
-                case 'На штативе до фазового центра':
-                    file_info['antenna height type'] = 'tripod_phase'
-
-            file_info['organization'] = metadata['Организация']
-            file_info['object'] = metadata['Объект']
-            file_info['operator'] = metadata['Исполнитель']
-            file_info['centre type'] = metadata['Тип и характеристика геодезического знака']
-            file_info['benchmark type'] = metadata['Тип и характеристика центра (марки)']
-            file_info['gdop'] = metadata['GDOP']
-            file_info['pdop'] = metadata['PDOP']
-
-            save_file = os.path.join(self.save_path, file_info['marker name'].strip())
-            journal_generator(file_info, save_file)
-
         messagebox.showinfo("Обработка завершена", "Файлы успешно обработаны и сохранены.")
         self.files.clear()
         self.update_files_list()
         self.save_path = ""
         self.update_save_path()
+
 
 def run_app():
     root = tk.Tk()
