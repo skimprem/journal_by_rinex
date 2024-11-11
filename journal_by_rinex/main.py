@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from journal_by_rinex.functions import get_info, journal_generator
 
 class FileProcessorApp:
     def __init__(self, root):
@@ -119,6 +121,47 @@ class FileProcessorApp:
         if not self.save_path:
             messagebox.showwarning("Нет пути для сохранения", "Пожалуйста, укажите путь для сохранения.")
             return
+
+        metadata = {
+            "Организация": self.organization.get(),
+            "Объект": self.object_name.get(),
+            "Исполнитель": self.operator.get(),
+            "Тип и характеристика геодезического знака": self.benchmark_type.get(),
+            "Тип и характеристика центра (марки)": self.center_type.get(),
+            "GDOP": self.gdop.get(),
+            "PDOP": self.pdop.get(),
+            "Тип измерения": self.measurement_type.get()
+        }
+
+        for file in self.files:
+
+            # filename = os.path.basename(file)
+
+            file_info = get_info(file)
+
+            match self.measurement_type.get():
+                case 'Без штатива до основания':
+                    file_info['antenna height type'] = 'base'
+                case 'Без штатива до фазового центра':
+                    file_info['antenna height type'] = 'phase'
+                case 'На штативе наклонная':
+                    file_info['antenna height type'] = 'tripod_slant'
+                case 'На штативе до основания':
+                    file_info['antenna height type'] = 'tripod_base'
+                case 'На штативе до фазового центра':
+                    file_info['antenna height type'] = 'tripod_phase'
+
+            file_info['organization'] = metadata['Организация']
+            file_info['object'] = metadata['Объект']
+            file_info['operator'] = metadata['Исполнитель']
+            file_info['centre type'] = metadata['Тип и характеристика геодезического знака']
+            file_info['benchmark type'] = metadata['Тип и характеристика центра (марки)']
+            file_info['gdop'] = metadata['GDOP']
+            file_info['pdop'] = metadata['PDOP']
+
+            save_file = os.path.join(self.save_path, file_info['marker name'].strip())
+            journal_generator(file_info, save_file)
+
 
         messagebox.showinfo("Обработка завершена", "Файлы успешно обработаны и сохранены.")
         self.files.clear()

@@ -1,17 +1,24 @@
 import os
 import georinex as gr
 import pyproj
+from datetime import datetime as dt
 from pylatex import Document, Section, Table, Tabular, LongTable, NoEscape,\
     Package, Command, MultiColumn, MiniPage, MultiRow
-# import numpy as np
-# import geopandas as gpd
-# import contextily as ctx
-# from shapely.geometry import Point
-# import matplotlib.pyplot as plt
-# import cartopy.io.img_tiles as cimgt
-# from cartopy import crs as ccrs
+import numpy as np
+import geopandas as gpd
+import contextily as ctx
+from shapely.geometry import Point
+import matplotlib.pyplot as plt
+import cartopy.io.img_tiles as cimgt
+from cartopy import crs as ccrs
 
-
+HEIGHT_TYPES = {
+    'base': 'вертикальная (УПЦ)',
+    'phase': 'вертикальная до фазового центра (УПЦ)',
+    'tripod_slant': 'наклонная (штатив)',
+    'tripod_base': 'вертикальная (штатив)',
+    'tripod_phase': 'вертикальная до фазового центра (штатив)',
+}
 
 def get_info(rinex_file):
 
@@ -32,13 +39,25 @@ def get_info(rinex_file):
     info['antenna type'] = ant_type[20:40].strip()
     info['antenna height'], _, _ = map(float, header['ANTENNA: DELTA H/E/N'].split())
 
+    times = []
+    with open(rinex_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            if line[0] == '>':
+                year, month, day, hour, minute, second = line.split()[1:7]
+                times.append(
+                    dt.strptime(f'{year}-{month}-{day} {hour}:{minute}:{second.split('.')[0]}', '%Y-%m-%d %H:%M:%S'))
+    
+    start_time = times[0]
+    end_time = times[-1]
     # print('loading ... ', end='')
     # data = gr.load(rinex_file)
     # print('done!')
     # start_time = data.time[0].values  # Start of seance
     # end_time = data.time[-1].values   # End of seance
-    # info['start'] = start_time
-    # info['end'] = end_time
+    info['start date'] = start_time.date()
+    info['start time'] = start_time.time()
+    info['end date'] = end_time.date()
+    info['end time'] = end_time.time()
 
     return info
 
@@ -75,41 +94,48 @@ def journal_generator(data, filename):
 
     doc.append(NoEscape(r'\section*{ЖУРНАЛ СПУТНИКОВЫХ НАБЛЮДЕНИЙ}'))
 
-    doc.append(NoEscape(f'Организация: {data['organization']} \\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindent Наименование пункта: {data['marker name']}\\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindent Объект: {data['object']}\\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindent Исполнитель (ФИО подпись): {data['operator']}\\hrulefill'))
+    with doc.create(LongTable(r'p{0.3\textwidth}p{0.6\textwidth}')) as table:
+        table.add_row(['Организация:', data['organization']])
+        table.add_hline(2,2)
+        table.add_row(['Наименование пункта:', data['marker name']])
+        table.add_hline(2,2)
+        table.add_row(['Объект:', data['object']])
+        table.add_hline(2,2)
+        table.add_row(['Исполнитель (ФИО подпись):', data['operator']])
+        table.add_hline(2,2)
 
-    with doc.create(LongTable('l')) as table:
-        table.add_row(["Приближенные координаты"])
-        table.add_row([f'B = {data["latitude"]:.6f}'])
-        table.add_hline()
-        table.add_row([f'L = {data["longitude"]:.6f}'])
-        table.add_hline()
-        table.add_row([f'H = {data["height"]:.6f}'])
-        table.add_hline()
-        table.add_row([f"Трапеция масштаба карты 1:100000 {crd2cell_100(data['longitude'], data['latitude'])}"])
-        table.add_hline()
-        table.add_row([f'Тип и № приемника {data["receiver type"]} {data["receiver number"]}'])
-        table.add_hline()
-        table.add_row([f'Тип и № антенны {data["antenna type"]} {data["antenna number"]}'])
-        table.add_hline()
-
-    doc.append(NoEscape(f'\\noindentТип и характеристика геодезического знака {data['centre type']}\\hrulefill'))
-    doc.append(NoEscape(f'\\par\\noindentТип и характеристика центра (марки) {data['benchmark type']}\\hrulefill'))
+    with doc.create(LongTable(r'p{0.3\textwidth}p{0.6\textwidth}')) as table:
+        table.add_row([MultiColumn(size=2, data='Приближенные координаты:', align='c')])
+        table.add_hline(2, 2)
+        table.add_row([MultiColumn(size=1, data='B =', align='r'), f'{data["latitude"]:.6f}'])
+        table.add_hline(2, 2)
+        table.add_row([MultiColumn(size=1, data='L =', align='r'), f'{data["longitude"]:.6f}'])
+        table.add_hline(2, 2)
+        table.add_row([MultiColumn(size=1, data='H =', align='r'), f'{data["height"]:.6f}'])
+        table.add_hline(2, 2)
+        table.add_row(['Трапеция 1:100000:', f'{crd2cell_100(data['longitude'], data['latitude'])}'])
+        table.add_hline(2, 2)
+        table.add_row(['Тип и № приемника:', f'{data["receiver type"]} {data["receiver number"]}'])
+        table.add_hline(2, 2)
+        table.add_row(['Тип и № антенны:', f'{data["antenna type"]} {data["antenna number"]}'])
+        table.add_hline(2, 2)
+        table.add_row(['Тип и хар-ка геод. знака:', f'{data['centre type']}'])
+        table.add_row(['Тип и хар-ка центра (марки):', f'{data['benchmark type']}'])
 
     doc.append(NoEscape(r'\begin{center}\textbf{Время выполнения сеансов}\end{center}'))
 
+    ant_height_type = data['antenna height type']
+
     # Create a table to display the metadata
-    with doc.create(LongTable(NoEscape(r"|p{0.3\textwidth}|p{0.3\textwidth}|p{0.3\textwidth}|"))) as table:
+    with doc.create(LongTable(NoEscape(r"|p{0.3\textwidth}|p{0.3\textwidth}@|p{0.3\textwidth}@|"))) as table:
         table.add_hline()
-        table.add_row(["Номер сеанса", MultiColumn(size=2, align='c|', data=NoEscape(r'Сеанс \textnumero{}'))])
+        table.add_row(["Номер сеанса", MultiColumn(size=2, align='c@|', data=NoEscape(r'Сеанс \textnumero{}'))])
         table.add_hline(2,3)
         table.add_row(['', 'Начало', 'Конец'])
         table.add_hline()
-        table.add_row(['Дата', '', ''])
+        table.add_row(['Дата', str(data['start date']), str(data['end date'])])
         table.add_hline()
-        table.add_row(['Время', '', ''])
+        table.add_row(['Время', str(data['start time'])+'+0 UTC', str(data['end time'])+'+0 UTC'])
         table.add_hline()
         table.add_row(['Высота антенны', data['antenna height'], data['antenna height']])
         table.add_hline()
@@ -117,17 +143,7 @@ def journal_generator(data, filename):
         table.add_hline()
         table.add_row(['PDOP', data['pdop'], data['pdop']])
         table.add_hline()
-
-    doc.append(
-        NoEscape(
-            r'''\begin{center}
-                \textbf{Тип измерения высоты антенны (наклонная, вертикальная,
-                вертикальная до фазового центра)}
-            \end{center}'''
-        ))
-    
-    ant_height_type = data['antenna height type']
-    
+   
     abs_path = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__), 'images'))
@@ -142,12 +158,16 @@ def journal_generator(data, filename):
     a_picture = r'\includegraphics[width=0.2\textwidth]{' + a_pic_path.replace("\\", "/") + '}'
     b_picture = r'\includegraphics[width=0.2\textwidth]{' + b_pic_path.replace("\\", "/") + '}'
 
-    # location_map = get_map(data['latitude'], data['longitude'], data['marker name'])
-    # location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
-    # location_map.savefig(location_map_path)
-    # insert_file = r'\includegraphics[width=0.3\textwidth]{'+location_map_path.replace('\\', '/')+'}'
+    location_map = get_map(data['longitude'], data['latitude'], data['marker name'])
+    location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
+    location_map.savefig(location_map_path, bbox_inches='tight')
+    insert_file = r'\includegraphics[width=0.6\textwidth]{'+location_map_path.replace('\\', '/')+'}'
 
     with doc.create(LongTable(r'|p{0.6\textwidth}|p{0.3\textwidth}|')) as table:
+        table.add_hline()
+        table.add_row([
+            NoEscape(r'''Тип измерения высоты антенны:
+                     (наклонная, вертикальная, вертикальная до фазового центра)'''), HEIGHT_TYPES[ant_height_type]])
         table.add_hline()
         table.add_row(
             [
@@ -156,8 +176,7 @@ def journal_generator(data, filename):
             ]
         )
         table.add_hline()
-        # table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
-        table.add_row([MultiRow(4, data=''), 'A. Без штатива'])
+        table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
         table.add_row(['', NoEscape(a_picture)])
         table.add_row(['', 'B. На штативе'])
         table.add_row(['', NoEscape(b_picture)])
@@ -166,27 +185,26 @@ def journal_generator(data, filename):
     # Generate the PDF
     doc.generate_pdf(filename, clean_tex=False) 
 
-# def get_map(longitude, latitude, marker_name):
-#     ''' Get map of ties scheme '''
+def get_map(longitude, latitude, marker_name):
+    ''' Get map of ties scheme '''
 
-#     fig = plt.figure(figsize=(15, 15))
+    fig = plt.figure(figsize=(15, 15))
       
-#     extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
-#     request = cimgt.OSM()
-#     ax = plt.axes(projection=request.crs)
-#     ax.set_extent(extent)
+    extent = [longitude - 0.01, longitude + 0.01, latitude - 0.005, latitude + 0.005]
+    request = cimgt.OSM()
+    ax = plt.axes(projection=request.crs)
+    ax.set_extent(extent)
 
-#     zoom = 11
+    zoom = 15
 
-#     ax.add_image(request, zoom)
+    ax.add_image(request, zoom)
 
-#     ax.plot(longitude, latitude, '-ok', mfc='w', transform=ccrs.PlateCarree())
+    ax.plot(longitude, latitude, '-ok', mfc='w', transform=ccrs.PlateCarree())
    
-#     ax.annotate(marker_name, xy=(longitude, latitude),
-#         xycoords='data', xytext=(1.5, 1.5),
-#         textcoords='offset points',
-#         fontsize=14,
-#         color='k', transform=ccrs.PlateCarree())
+    ax.annotate(marker_name, xy=(longitude, latitude),
+        xycoords='data', xytext=(1.5, 1.5),
+        textcoords='offset points',
+        fontsize=14,
+        color='k', transform=ccrs.PlateCarree())
 
-#     return fig
-
+    return fig
