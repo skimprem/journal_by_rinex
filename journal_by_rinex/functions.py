@@ -169,12 +169,21 @@ def journal_generator(data, filename):
 # def get_map(longitude, latitude, marker_name):
 #     ''' Get map of ties scheme '''
 
+<<<<<<< HEAD
 #     fig = plt.figure(figsize=(15, 15))
       
 #     extent = [longitude - 0.1, longitude + 0.1, latitude - 0.1, latitude + 0.1]
 #     request = cimgt.OSM()
 #     ax = plt.axes(projection=request.crs)
 #     ax.set_extent(extent)
+=======
+    fig = plt.figure(figsize=(5, 5))
+      
+    # extent = [longitude - 0.01, longitude + 0.01, latitude - 0.01, latitude + 0.01]
+    request = cimgt.OSM()
+    ax = plt.axes(projection=request.crs)
+    # ax.set_extent(extent)
+>>>>>>> 750c5186ff7cdbca1fd3b47cbe03fa916a44ad68
 
 #     zoom = 11
 
@@ -188,5 +197,9 @@ def journal_generator(data, filename):
 #         fontsize=14,
 #         color='k', transform=ccrs.PlateCarree())
 
+<<<<<<< HEAD
 #     return fig
 
+=======
+    return fig
+>>>>>>> 750c5186ff7cdbca1fd3b47cbe03fa916a44ad68
