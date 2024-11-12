@@ -92,23 +92,25 @@ def journal_generator(data, filename):
 
     doc.append(Command('thispagestyle', 'empty'))
 
-    with doc.create(Section(title=r'ЖУРНАЛ СПУТНИКОВЫХ НАБЛЮДЕНИЙ', numbering=False)):
+    with doc.create(Section(title='ЖУРНАЛ СПУТНИКОВЫХ НАБЛЮДЕНИЙ', numbering=False)):
 
-        with doc.create(Subsection(title=r'Общая информация', numbering=False)):
+        with doc.create(Subsection(title='Информация о пункте и оборудовании', numbering=False)):
             with doc.create(
                 Tabularx(
                     table_spec=NoEscape(r'|l|X|'),
                     width_argument=NoEscape(r'\textwidth'))) as table:
                 table.add_hline()
-                table.add_row(['Организация:', data['organization']])
+                table.add_row([MultiColumn(size=2, data=NoEscape(r'\textbf{Общая информация}'), align='|c|')])
                 table.add_hline()
-                table.add_row(['Наименование пункта:', data['marker name']])
+                table.add_row(['Организация', data['organization']])
                 table.add_hline()
-                table.add_row(['Объект:', data['object']])
+                table.add_row(['Наименование пункта', data['marker name']])
                 table.add_hline()
-                table.add_row(['Исполнитель (ФИО):', data['operator']])
+                table.add_row(['Объект', data['object']])
                 table.add_hline()
-                table.add_row([MultiColumn(size=2, data='Приближенные координаты:', align='c')])
+                table.add_row(['Исполнитель (ФИО)', data['operator']])
+                table.add_hline()
+                table.add_row([MultiColumn(size=2, data=NoEscape(r'\textbf{Местоположение}'), align='|c|')])
                 table.add_hline()
                 table.add_row(['Широта', f'{data["latitude"]:.6f}'])
                 table.add_hline()
@@ -116,21 +118,25 @@ def journal_generator(data, filename):
                 table.add_hline()
                 table.add_row(['Высота', f'{data["height"]:.6f}'])
                 table.add_hline()
-                table.add_row(['Трапеция 1:100000:', f'{crd2cell_100(data['longitude'], data['latitude'])}'])
+                table.add_row(['Трапеция 1:100000', f'{crd2cell_100(data['longitude'], data['latitude'])}'])
                 table.add_hline()
-                table.add_row(['Тип и № приемника:', f'{data["receiver type"]} {data["receiver number"]}'])
+                table.add_row([MultiColumn(size=2, data=NoEscape(r'\textbf{Оборудование}'), align='|c|')])
                 table.add_hline()
-                table.add_row(['Тип и № антенны:', f'{data["antenna type"]} {data["antenna number"]}'])
+                table.add_row(['Тип и № приемника', f'{data["receiver type"]} {data["receiver number"]}'])
                 table.add_hline()
-                table.add_row(['Тип и хар-ка геод. знака:', f'{data['centre type']}'])
+                table.add_row(['Тип и № антенны', f'{data["antenna type"]} {data["antenna number"]}'])
                 table.add_hline()
-                table.add_row(['Тип и хар-ка центра (марки):', f'{data['benchmark type']}'])
+                table.add_row([MultiColumn(size=2, data=NoEscape(r'\textbf{Характеристика пункта}'), align='|c|')])
+                table.add_hline()
+                table.add_row(['Тип и хар-ка геод. знака', f'{data['centre type']}'])
+                table.add_hline()
+                table.add_row(['Тип и хар-ка центра (марки)', f'{data['benchmark type']}'])
                 table.add_hline()
 
         ant_height_type = data['antenna height type']
 
         # Create a table to display the metadata
-        with doc.create(Subsection(title=r'Информация о сеансе измерений', numbering=False)):
+        with doc.create(Subsection(title='Информация о сеансе измерений', numbering=False)):
             with doc.create(
                 Tabularx(
                     table_spec=NoEscape(r"|X|X|X|"),
@@ -217,12 +223,13 @@ def get_map(longitude, latitude, marker_name):
 
     ax.add_image(request, zoom)
 
-    ax.plot(longitude, latitude, '-ok', mfc='w', transform=ccrs.PlateCarree())
+    ax.plot(longitude, latitude, '-^w', markersize=20, mfc='r', transform=ccrs.PlateCarree())
    
     ax.annotate(marker_name, xy=(longitude, latitude),
-        xycoords='data', xytext=(1.5, 1.5),
+        xycoords='data', xytext=(20, 20),
         textcoords='offset points',
         fontsize=14,
+        bbox=dict(boxstyle="round,pad=0.3", edgecolor="none", facecolor="white"),
         color='k', transform=ccrs.PlateCarree())
 
     return fig

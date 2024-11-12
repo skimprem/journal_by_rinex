@@ -92,8 +92,23 @@ class FileProcessorApp:
         self.close_button.grid(row=15, column=2, columnspan=2, pady=5)
 
         # Подпись разработчика внизу окна
-        developer_label = tk.Label(self.root, text="by roman.sermiagin@gmail.com\nhttp://github.com/skimprem/journal_by_rinex", font=("Arial", 10, "italic"), anchor="w", justify="left", cursor="hand2")
-        developer_label.grid(row=20, column=0, columnspan=3, pady=10, sticky="w")
+        developer_email = tk.Label(
+            self.root, text="by roman.sermiagin@gmail.com",
+            font=("Arial", 10, "italic"),
+            anchor="w",
+            justify="left",
+            cursor="hand2"
+        )
+        developer_email.grid(row=20, column=0, columnspan=1, pady=10, sticky="w")
+
+        developer_label = tk.Label(
+            self.root, text="http://github.com/skimprem/journal_by_rinex",
+            font=("Arial", 10, "italic"),
+            anchor="w",
+            justify="left",
+            cursor="hand2"
+        )
+        developer_label.grid(row=20, column=3, columnspan=3, pady=10, sticky="w")
 
         # Добавление функциональности для кликабельной ссылки
         def open_github(event):
