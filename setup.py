@@ -19,7 +19,10 @@ setup(
         "georinex",       # For RINEX file processing
         "pyproj",         # For geodetic transformations
         "pylatex",        # For PDF generation
-        "pypandoc"        # For DOCX generation
+        "pypandoc",       # For DOCX generation
+        "geopandas",      # For geospatial data processing
+        "contextily",     # For basemaps
+        "cartopy",        # For geospatial data visualization
     ],
     entry_points={
         'console_scripts': [
