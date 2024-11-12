@@ -81,15 +81,26 @@ class FileProcessorApp:
 
         # Кнопка для выполнения обработки
         self.process_button = tk.Button(self.root, text="Обработать файлы", command=self.process_files)
-        self.process_button.grid(row=15, column=0, columnspan=2, pady=10)
+        self.process_button.grid(row=15, column=0, columnspan=1, pady=10)
+
+        # Кнопка сброса
+        self.reset_button = tk.Button(self.root, text="Сбросить", command=self.reset)
+        self.reset_button.grid(row=15, column=1, pady=5)
 
         # Кнопка закрытия приложения
         self.close_button = tk.Button(self.root, text="Закрыть", command=self.root.destroy)
         self.close_button.grid(row=15, column=2, columnspan=2, pady=5)
 
         # Подпись разработчика внизу окна
-        developer_label = tk.Label(self.root, text="by roman.sermiagin@gmail.com", font=("Arial", 10, "italic"))
-        developer_label.grid(row=20, column=3, columnspan=3, pady=10, sticky="s")
+        developer_label = tk.Label(self.root, text="by roman.sermiagin@gmail.com\nhttp://github.com/skimprem/journal_by_rinex", font=("Arial", 10, "italic"), anchor="w", justify="left", cursor="hand2")
+        developer_label.grid(row=20, column=0, columnspan=3, pady=10, sticky="w")
+
+        # Добавление функциональности для кликабельной ссылки
+        def open_github(event):
+            import webbrowser
+            webbrowser.open_new("http://github.com/skimprem/journal_by_rinex")
+
+        developer_label.bind("<Button-1>", open_github)
 
     def create_text_input(self, label_text, variable, row, column, width=30):
         """Создает текстовое поле с меткой."""
@@ -191,6 +202,13 @@ class FileProcessorApp:
         self.files.clear()
         self.update_files_list()
         self.save_path = ""
+        self.update_save_path()
+
+    def reset(self):
+        # Сброс списка файлов и пути сохранения
+        self.files = []
+        self.save_path = ""
+        self.update_files_list()
         self.update_save_path()
 
 

@@ -207,7 +207,9 @@ def get_map(longitude, latitude, marker_name):
     fig = plt.figure(figsize=(15, 15))
       
     extent = [longitude - 0.01, longitude + 0.01, latitude - 0.005, latitude + 0.005]
-    request = cimgt.OSM()
+    # request = cimgt.OSM()
+    # request = cimgt.Stamen('terrain-background')
+    request = cimgt.QuadtreeTiles()
     ax = plt.axes(projection=request.crs)
     ax.set_extent(extent)
 
