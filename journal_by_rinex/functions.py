@@ -2,8 +2,8 @@ import os
 import georinex as gr
 import pyproj
 from datetime import datetime as dt
-from pylatex import Document, Section, Table, Tabular, LongTable, NoEscape,\
-    Package, Command, MultiColumn, MiniPage, MultiRow
+from pylatex import Document, Section, Table, Tabularx, LongTable, NoEscape,\
+    Package, Command, MultiColumn, MiniPage, MultiRow, Section, Subsection
 import numpy as np
 import geopandas as gpd
 import contextily as ctx
@@ -92,95 +92,111 @@ def journal_generator(data, filename):
 
     doc.append(Command('thispagestyle', 'empty'))
 
-    doc.append(NoEscape(r'\section*{ЖУРНАЛ СПУТНИКОВЫХ НАБЛЮДЕНИЙ}'))
+    with doc.create(Section(title=r'ЖУРНАЛ СПУТНИКОВЫХ НАБЛЮДЕНИЙ', numbering=False)):
 
-    with doc.create(LongTable(r'p{0.3\textwidth}p{0.6\textwidth}')) as table:
-        table.add_row(['Организация:', data['organization']])
-        table.add_hline(2,2)
-        table.add_row(['Наименование пункта:', data['marker name']])
-        table.add_hline(2,2)
-        table.add_row(['Объект:', data['object']])
-        table.add_hline(2,2)
-        table.add_row(['Исполнитель (ФИО подпись):', data['operator']])
-        table.add_hline(2,2)
+        with doc.create(Subsection(title=r'Общая информация', numbering=False)):
+            with doc.create(
+                Tabularx(
+                    table_spec=NoEscape(r'|l|X|'),
+                    width_argument=NoEscape(r'\textwidth'))) as table:
+                table.add_hline()
+                table.add_row(['Организация:', data['organization']])
+                table.add_hline()
+                table.add_row(['Наименование пункта:', data['marker name']])
+                table.add_hline()
+                table.add_row(['Объект:', data['object']])
+                table.add_hline()
+                table.add_row(['Исполнитель (ФИО):', data['operator']])
+                table.add_hline()
+                table.add_row([MultiColumn(size=2, data='Приближенные координаты:', align='c')])
+                table.add_hline()
+                table.add_row(['Широта', f'{data["latitude"]:.6f}'])
+                table.add_hline()
+                table.add_row(['Долгота', f'{data["longitude"]:.6f}'])
+                table.add_hline()
+                table.add_row(['Высота', f'{data["height"]:.6f}'])
+                table.add_hline()
+                table.add_row(['Трапеция 1:100000:', f'{crd2cell_100(data['longitude'], data['latitude'])}'])
+                table.add_hline()
+                table.add_row(['Тип и № приемника:', f'{data["receiver type"]} {data["receiver number"]}'])
+                table.add_hline()
+                table.add_row(['Тип и № антенны:', f'{data["antenna type"]} {data["antenna number"]}'])
+                table.add_hline()
+                table.add_row(['Тип и хар-ка геод. знака:', f'{data['centre type']}'])
+                table.add_hline()
+                table.add_row(['Тип и хар-ка центра (марки):', f'{data['benchmark type']}'])
+                table.add_hline()
 
-    with doc.create(LongTable(r'p{0.3\textwidth}p{0.6\textwidth}')) as table:
-        table.add_row([MultiColumn(size=2, data='Приближенные координаты:', align='c')])
-        table.add_hline(2, 2)
-        table.add_row([MultiColumn(size=1, data='B =', align='r'), f'{data["latitude"]:.6f}'])
-        table.add_hline(2, 2)
-        table.add_row([MultiColumn(size=1, data='L =', align='r'), f'{data["longitude"]:.6f}'])
-        table.add_hline(2, 2)
-        table.add_row([MultiColumn(size=1, data='H =', align='r'), f'{data["height"]:.6f}'])
-        table.add_hline(2, 2)
-        table.add_row(['Трапеция 1:100000:', f'{crd2cell_100(data['longitude'], data['latitude'])}'])
-        table.add_hline(2, 2)
-        table.add_row(['Тип и № приемника:', f'{data["receiver type"]} {data["receiver number"]}'])
-        table.add_hline(2, 2)
-        table.add_row(['Тип и № антенны:', f'{data["antenna type"]} {data["antenna number"]}'])
-        table.add_hline(2, 2)
-        table.add_row(['Тип и хар-ка геод. знака:', f'{data['centre type']}'])
-        table.add_row(['Тип и хар-ка центра (марки):', f'{data['benchmark type']}'])
+        ant_height_type = data['antenna height type']
 
-    doc.append(NoEscape(r'\begin{center}\textbf{Время выполнения сеансов}\end{center}'))
+        # Create a table to display the metadata
+        with doc.create(Subsection(title=r'Информация о сеансе измерений', numbering=False)):
+            with doc.create(
+                Tabularx(
+                    table_spec=NoEscape(r"|X|X|X|"),
+                    width_argument=NoEscape(r'\textwidth'))) as table:
+                table.add_hline()
+                table.add_row([MultiColumn(size=3, data='Время выполнения сеансов', align='|c|')])
+                table.add_hline()
+                table.add_row(["Номер сеанса", MultiColumn(size=2, align='c|', data=NoEscape(r'Сеанс \textnumero{}'))])
+                table.add_hline(2,3)
+                table.add_row(['', 'Начало', 'Конец'])
+                table.add_hline()
+                table.add_row(['Дата', str(data['start date']), str(data['end date'])])
+                table.add_hline()
+                table.add_row(['Время', str(data['start time'])+'+0 UTC', str(data['end time'])+'+0 UTC'])
+                table.add_hline()
+                table.add_row(['Высота антенны', data['antenna height'], data['antenna height']])
+                table.add_hline()
+                table.add_row(['GDOP', data['gdop'], data['gdop']])
+                table.add_hline()
+                table.add_row(['PDOP', data['pdop'], data['pdop']])
+                table.add_hline()
+    
+        abs_path = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), 'images'))
+    
+        if ant_height_type in ['base', 'phase']:
+            a_pic_path = os.path.join(abs_path, ant_height_type)
+            b_pic_path = os.path.join(abs_path, 'tripod_default')
+        else:
+            a_pic_path = os.path.join(abs_path, 'default')
+            b_pic_path = os.path.join(abs_path, ant_height_type)
 
-    ant_height_type = data['antenna height type']
+        a_picture = r'\includegraphics[width=0.2\textwidth]{' + a_pic_path.replace("\\", "/") + '}'
+        b_picture = r'\includegraphics[width=0.2\textwidth]{' + b_pic_path.replace("\\", "/") + '}'
 
-    # Create a table to display the metadata
-    with doc.create(LongTable(NoEscape(r"|p{0.3\textwidth}|p{0.3\textwidth}@|p{0.3\textwidth}@|"))) as table:
-        table.add_hline()
-        table.add_row(["Номер сеанса", MultiColumn(size=2, align='c@|', data=NoEscape(r'Сеанс \textnumero{}'))])
-        table.add_hline(2,3)
-        table.add_row(['', 'Начало', 'Конец'])
-        table.add_hline()
-        table.add_row(['Дата', str(data['start date']), str(data['end date'])])
-        table.add_hline()
-        table.add_row(['Время', str(data['start time'])+'+0 UTC', str(data['end time'])+'+0 UTC'])
-        table.add_hline()
-        table.add_row(['Высота антенны', data['antenna height'], data['antenna height']])
-        table.add_hline()
-        table.add_row(['GDOP', data['gdop'], data['gdop']])
-        table.add_hline()
-        table.add_row(['PDOP', data['pdop'], data['pdop']])
-        table.add_hline()
-   
-    abs_path = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__), 'images'))
- 
-    if ant_height_type in ['base', 'phase']:
-        a_pic_path = os.path.join(abs_path, ant_height_type)
-        b_pic_path = os.path.join(abs_path, 'tripod_default')
-    else:
-        a_pic_path = os.path.join(abs_path, 'default')
-        b_pic_path = os.path.join(abs_path, ant_height_type)
+        location_map = get_map(data['longitude'], data['latitude'], data['marker name'])
+        location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
+        location_map.savefig(location_map_path, bbox_inches='tight')
+        insert_file = r'\includegraphics[width=0.6\textwidth]{'+location_map_path.replace('\\', '/')+'}'
 
-    a_picture = r'\includegraphics[width=0.2\textwidth]{' + a_pic_path.replace("\\", "/") + '}'
-    b_picture = r'\includegraphics[width=0.2\textwidth]{' + b_pic_path.replace("\\", "/") + '}'
-
-    location_map = get_map(data['longitude'], data['latitude'], data['marker name'])
-    location_map_path = os.path.join(os.path.dirname(filename), f'{data['marker name']}.png')
-    location_map.savefig(location_map_path, bbox_inches='tight')
-    insert_file = r'\includegraphics[width=0.6\textwidth]{'+location_map_path.replace('\\', '/')+'}'
-
-    with doc.create(LongTable(r'|p{0.6\textwidth}|p{0.3\textwidth}|')) as table:
-        table.add_hline()
-        table.add_row([
-            NoEscape(r'''Тип измерения высоты антенны:
-                     (наклонная, вертикальная, вертикальная до фазового центра)'''), HEIGHT_TYPES[ant_height_type]])
-        table.add_hline()
-        table.add_row(
-            [
-                'Схема расположения пункта с указанием минимум 3-х дистанций до долговечных объектов местности',
-                'Зарисовка постановки антенны (штатив, веха, пилон, тур, УПЦ)'
-            ]
-        )
-        table.add_hline()
-        table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
-        table.add_row(['', NoEscape(a_picture)])
-        table.add_row(['', 'B. На штативе'])
-        table.add_row(['', NoEscape(b_picture)])
-        table.add_hline()
+        with doc.create(Subsection(title=r'Измерение высоты и схема расположение пункта', numbering=False)):
+            with doc.create(
+                Tabularx(
+                    table_spec=NoEscape(r'|p{0.6\textwidth}|X|'),
+                    width_argument=NoEscape(r'\textwidth'))) as table:
+                table.add_hline()
+                table.add_row([
+                    NoEscape(r'''Тип измерения высоты антенны:
+                            (наклонная, вертикальная, вертикальная до фазового центра)'''), HEIGHT_TYPES[ant_height_type]])
+                table.add_hline()
+                table.add_row(
+                    [
+                        'Схема расположения пункта с указанием минимум 3-х дистанций до долговечных объектов местности',
+                        'Зарисовка постановки антенны (штатив, веха, пилон, тур, УПЦ)'
+                    ]
+                )
+                table.add_hline()
+                table.add_row([MultiRow(4, data=NoEscape(insert_file)), 'A. Без штатива'])
+                table.add_row(['', NoEscape(a_picture)])
+                table.add_row(['', 'B. На штативе'])
+                table.add_row(['', NoEscape(b_picture)])
+                table.add_hline()
+    
+    doc.append(NoEscape(r'\vfill'))
+    doc.append(NoEscape(r'\hfill Подпись'))
     
     # Generate the PDF
     doc.generate_pdf(filename, clean_tex=False) 

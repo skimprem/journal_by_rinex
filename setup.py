@@ -18,7 +18,8 @@ setup(
         "tk",             # Tkinter for GUI
         "georinex",       # For RINEX file processing
         "pyproj",         # For geodetic transformations
-        "pylatex"         # For PDF generation
+        "pylatex",        # For PDF generation
+        "pypandoc"        # For DOCX generation
     ],
     entry_points={
         'console_scripts': [
