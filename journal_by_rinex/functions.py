@@ -40,13 +40,19 @@ def get_info(rinex_file):
     info['antenna height'], _, _ = map(float, header['ANTENNA: DELTA H/E/N'].split())
 
     times = []
+    count = 0
     with open(rinex_file, 'r', encoding='utf-8') as f:
         for line in f:
+            count += 1
             if line[0] == '>':
-                year, month, day, hour, minute, second = line.split()[1:7]
-                times.append(
-                    dt.strptime(f'{year}-{month}-{day} {hour}:{minute}:{second.split('.')[0]}', '%Y-%m-%d %H:%M:%S'))
-    
+                try: 
+                    year, month, day, hour, minute, second = line.split()[1:7]
+                    times.append(
+                        dt.strptime(f'{year}-{month}-{day} {hour}:{minute}:{second.split('.')[0]}', '%Y-%m-%d %H:%M:%S'))
+                except ValueError:
+                    print(f'Warning! Invalid time format in RINEX file, line {count}')
+                    continue
+
     start_time = times[0]
     end_time = times[-1]
     # print('loading ... ', end='')
