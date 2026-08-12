@@ -6,12 +6,18 @@ import glob
 import random
 import tkinter as tk
 from datetime import datetime
+from importlib.metadata import version, PackageNotFoundError
 from tkinter import filedialog, messagebox, ttk
 import pypandoc
 import yaml
 from journal_by_rinex.functions import get_info, journal_generator
 
 RINEX_OBS_PATTERNS = ('*.??o', '*.??O')
+
+try:
+    APP_VERSION = version("journal_by_rinex")
+except PackageNotFoundError:
+    APP_VERSION = "dev"
 
 MEASUREMENT_OPTIONS = [
     "No tripod, to base",
@@ -193,15 +199,14 @@ class FileProcessorApp:
         self.close_button = tk.Button(self.root, text="Close", command=self.root.destroy)
         self.close_button.grid(row=15, column=2, columnspan=2, pady=5)
 
-        # Developer signature at the bottom of the window
-        developer_email = tk.Label(
-            self.root, text="by roman.sermiagin@gmail.com",
+        # Version label at the bottom of the window
+        version_label = tk.Label(
+            self.root, text=f"v{APP_VERSION}",
             font=("Arial", 10, "italic"),
             anchor="w",
             justify="left",
-            cursor="hand2"
         )
-        developer_email.grid(row=20, column=0, columnspan=1, pady=10, sticky="w")
+        version_label.grid(row=20, column=0, columnspan=1, pady=10, sticky="w")
 
         developer_label = tk.Label(
             self.root, text="http://github.com/skimprem/journal_by_rinex",
