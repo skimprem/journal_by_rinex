@@ -1,0 +1,63 @@
+# Example configuration for journal_by_rinex.
+#
+# Copy this file to "config.yaml" in the directory you run
+# `journal_by_rinex` from to have it applied automatically on startup,
+# or load it manually from the GUI via "Load config (YAML)".
+#
+# All fields are optional; any field left out keeps whatever is already
+# in the form. When loading several config files at once, later files
+# override values from earlier ones, so you can split shared defaults
+# (e.g. organization info) from per-object overrides (e.g. object name,
+# save path) into separate files.
+
+organization: Example Organization LLC
+operator: Ivanov Ivan Ivanovich
+
+# Corresponds to the "Geodetic mark type" field in the GUI
+geodetic_mark_type: Concrete pillar
+
+# Corresponds to the "Benchmark type" field in the GUI
+benchmark_type: Standard survey marker
+
+gdop: "2.5"
+pdop: "1.8"
+
+# Instead of a fixed GDOP/PDOP value, each file can get its own random
+# value drawn from a range. When *_random is true, gdop/pdop above are
+# ignored and gdop_min/gdop_max (default 1.5-2.0) are used instead.
+# gdop_random: true
+# gdop_min: 1.5
+# gdop_max: 2.0
+# pdop_random: true
+# pdop_min: 1.5
+# pdop_max: 2.0
+
+# One of: "No tripod, to base", "No tripod, to phase center",
+# "Tripod, slant", "Tripod, to base", "Tripod, to phase center",
+# "Not specified" (inserts the generic default.png / tripod_default.png
+# placeholder images instead of a specific measurement type)
+measurement_type: "No tripod, to base"
+
+# One of: "custom" (save to a single folder) or "source" (save next to
+# each source RINEX file)
+save_mode: custom
+
+# Only used when save_mode is "custom"
+# save_path: /path/to/output/folder
+
+# Per-object fields such as "object" or "save_path" are usually better
+# kept in a separate, smaller config file loaded alongside this one.
+# object: Object Name
+
+# Per-file overrides: apply different metadata to different RINEX files
+# within the same batch. Each rule needs a "pattern" (matched with shell
+# wildcards against the file's basename, e.g. "gorn*.??o", or against its
+# full path if the pattern contains a "/", e.g. "*/site-a/*") plus any of
+# the fields above to override for matching files. Rules are checked in
+# order; if several rules match the same file, later ones win.
+file_rules:
+  - pattern: "gorn*.??o"
+    object: Gorny Gigant
+  - pattern: "tast*.??o"
+    object: Tastybulak
+    operator: Petrov Petr Petrovich

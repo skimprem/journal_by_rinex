@@ -23,6 +23,8 @@ setup(
         "geopandas",      # For geospatial data processing
         "contextily",     # For basemaps
         "cartopy",        # For geospatial data visualization
+        "pyyaml",         # For YAML config file support
+        "pikepdf",        # For fixing up PDF radio button field groups
     ],
     entry_points={
         'console_scripts': [
